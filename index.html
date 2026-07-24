@@ -49,11 +49,16 @@
     width: 1080px;
     height: 1920px;
     opacity: 0;
+    visibility: hidden;      /* évite que la TV compose les 8 slides en permanence */
     overflow: hidden;
+    transition: opacity .6s ease, transform .6s ease;
   }
 
-  /* SLIDE VIDÉO — plein cadre */
-  .slide-video { background: var(--black); }
+  /* SLIDE VIDÉO — plein cadre, fondu simple sans transform */
+  .slide-video {
+    background: var(--black);
+    transition: opacity .6s ease;
+  }
   .slide-video video {
     position: absolute; top: 0; left: 0;
     width: 1080px; height: 1920px;
@@ -415,19 +420,27 @@
   const eyes  = document.querySelector('.eyes-widget');
 
   function playClip() {
-    try { clip.currentTime = 0; } catch (e) {}
+    // load() plutôt qu'un seek : le décodeur de la TV repart proprement à chaque cycle
+    try { clip.load(); } catch (e) {}
     const p = clip.play();
     if (p && p.catch) p.catch(() => {});   // si la TV refuse, on repart au tour suivant
   }
 
   function showSlide(idx) {
     slides.forEach((s, i) => {
+      if (i === idx) return;
       s.style.opacity = '0';
-      s.style.transform = 'scale(1.015)';
-      s.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      if (i !== 0) s.style.transform = 'scale(1.015)';
       s.querySelectorAll('.ri').forEach(el => el.classList.remove('on'));
       dots[i].classList.remove('active');
+      // une fois le fondu fini, on la sort complètement du rendu
+      clearTimeout(s._hideT);
+      s._hideT = setTimeout(() => { s.style.visibility = 'hidden'; }, 700);
     });
+
+    const cur = slides[idx];
+    clearTimeout(cur._hideT);
+    cur.style.visibility = 'visible';
     dots[idx].classList.add('active');
 
     // yeux masqués pendant la vidéo
@@ -435,9 +448,9 @@
     if (idx === 0) playClip(); else clip.pause();
 
     requestAnimationFrame(() => requestAnimationFrame(() => {
-      slides[idx].style.opacity = '1';
-      slides[idx].style.transform = 'scale(1)';
-      slides[idx].querySelectorAll('.ri').forEach((el, i) => {
+      cur.style.opacity = '1';
+      if (idx !== 0) cur.style.transform = 'scale(1)';
+      cur.querySelectorAll('.ri').forEach((el, i) => {
         setTimeout(() => el.classList.add('on'), 300 + i * 160);
       });
     }));
