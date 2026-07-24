@@ -52,6 +52,15 @@
     overflow: hidden;
   }
 
+  /* SLIDE VIDÉO — plein cadre */
+  .slide-video { background: var(--black); }
+  .slide-video video {
+    position: absolute; top: 0; left: 0;
+    width: 1080px; height: 1920px;
+    object-fit: cover;
+    background: var(--black);
+  }
+
   /* LOGO BAR — hauteur 176px */
   .logo-bar {
     position: absolute;
@@ -148,6 +157,7 @@
   .eyes-widget {
     position: absolute; top: 38px; right: 38px;
     z-index: 100; display: flex; gap: 16px; pointer-events: none;
+    transition: opacity .6s ease;
   }
   .eye-wrap { position: relative; width: 74px; height: 74px; }
   .eye-white {
@@ -212,7 +222,13 @@
     <div class="dot" id="d0"></div><div class="dot" id="d1"></div>
     <div class="dot" id="d2"></div><div class="dot" id="d3"></div>
     <div class="dot" id="d4"></div><div class="dot" id="d5"></div>
-    <div class="dot" id="d6"></div>
+    <div class="dot" id="d6"></div><div class="dot" id="d7"></div>
+  </div>
+
+  <!-- SLIDE VIDÉO — intro de cycle -->
+  <div class="slide slide-video" id="slideV">
+    <video id="clip" src="clip.mp4" muted playsinline preload="auto"
+           disablepictureinpicture controlslist="nodownload"></video>
   </div>
 
   <!-- SLIDE 0 — ORTHOPTISTE -->
@@ -379,14 +395,30 @@
 </div>
 
 <script>
-  const SLIDE_DURATION = 22000;
-  const TOTAL = 7;
-  let current = 0;
+  const SLIDE_DURATION = 22000;   // durée d'une slide texte
+  const VIDEO_DURATION = 10400;   // durée du clip (10 s) + léger fondu
+  const N_SLIDES = 7;
+  const TOTAL    = N_SLIDES + 1;  // vidéo (index 0) + les 7 slides
+
+  const DURATIONS = [VIDEO_DURATION].concat(new Array(N_SLIDES).fill(SLIDE_DURATION));
+  const CYCLE = DURATIONS.reduce((a, b) => a + b, 0);
+
+  let current = -1;
   let startTime = null;
 
-  const slides = Array.from({length: TOTAL}, (_, i) => document.getElementById('slide' + i));
-  const dots   = Array.from({length: TOTAL}, (_, i) => document.getElementById('d' + i));
-  const pfill  = document.getElementById('pfill');
+  const slides = [document.getElementById('slideV')].concat(
+    Array.from({length: N_SLIDES}, (_, i) => document.getElementById('slide' + i))
+  );
+  const dots  = Array.from({length: TOTAL}, (_, i) => document.getElementById('d' + i));
+  const pfill = document.getElementById('pfill');
+  const clip  = document.getElementById('clip');
+  const eyes  = document.querySelector('.eyes-widget');
+
+  function playClip() {
+    try { clip.currentTime = 0; } catch (e) {}
+    const p = clip.play();
+    if (p && p.catch) p.catch(() => {});   // si la TV refuse, on repart au tour suivant
+  }
 
   function showSlide(idx) {
     slides.forEach((s, i) => {
@@ -397,6 +429,11 @@
       dots[i].classList.remove('active');
     });
     dots[idx].classList.add('active');
+
+    // yeux masqués pendant la vidéo
+    eyes.style.opacity = (idx === 0) ? '0' : '1';
+    if (idx === 0) playClip(); else clip.pause();
+
     requestAnimationFrame(() => requestAnimationFrame(() => {
       slides[idx].style.opacity = '1';
       slides[idx].style.transform = 'scale(1)';
@@ -406,17 +443,24 @@
     }));
   }
 
+  function indexAt(pos) {
+    let acc = 0;
+    for (let i = 0; i < TOTAL; i++) {
+      acc += DURATIONS[i];
+      if (pos < acc) return i;
+    }
+    return TOTAL - 1;
+  }
+
   function tick(ts) {
     if (!startTime) startTime = ts;
-    const elapsed = ts - startTime;
-    const cyclePos = elapsed % (SLIDE_DURATION * TOTAL);
-    const newIdx = Math.floor(cyclePos / SLIDE_DURATION);
-    pfill.style.width = (cyclePos / (SLIDE_DURATION * TOTAL) * 100) + '%';
+    const cyclePos = (ts - startTime) % CYCLE;
+    const newIdx = indexAt(cyclePos);
+    pfill.style.width = (cyclePos / CYCLE * 100) + '%';
     if (newIdx !== current) { current = newIdx; showSlide(current); }
     requestAnimationFrame(tick);
   }
 
-  showSlide(0);
   requestAnimationFrame(tick);
 
   // YEUX
