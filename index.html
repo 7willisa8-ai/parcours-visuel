@@ -8,20 +8,34 @@
   @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap');
 
   :root {
-    --black: #0A0A0A;
-    --blue:  #5BB8D4;
-    --blue3: #82CEE0;
-    --white: #F0F8FA;
-    --grey:  rgba(240,248,250,0.6);
+    --ink:   #1B4664;                  /* titres */
+    --blue:  #2F7CA8;                  /* accent principal */
+    --blue3: #1E5C80;                  /* italiques, sous-titres */
+    --grey:  rgba(27,70,100,0.72);     /* corps de texte */
+    --card:  rgba(255,255,255,0.55);
+    --cardb: rgba(255,255,255,0.75);
+    --white: #1B4664;                  /* ex-blanc → repassé en bleu foncé (fond clair) */
+    --black: #cfe0ec;                  /* ex-noir → bleu clair, letterbox vidéo */
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* Fond calé sur le dégradé de la vidéo */
+  .bg-light {
+    background:
+      radial-gradient(1200px 900px at 15% 10%, #eaf3f8 0%, rgba(234,243,248,0) 60%),
+      radial-gradient(1000px 1200px at 88% 78%, #eef5f9 0%, rgba(238,245,249,0) 55%),
+      linear-gradient(160deg, #bcd6e7 0%, #9fc3dc 45%, #d2e4ef 100%);
+  }
 
   html, body {
     width: 1080px;
     height: 1920px;
     overflow: hidden;
-    background: var(--black);
+    background:
+      radial-gradient(1200px 900px at 15% 10%, #eaf3f8 0%, rgba(234,243,248,0) 60%),
+      radial-gradient(1000px 1200px at 88% 78%, #eef5f9 0%, rgba(238,245,249,0) 55%),
+      linear-gradient(160deg, #bcd6e7 0%, #9fc3dc 45%, #d2e4ef 100%);
     font-family: 'Raleway', sans-serif;
   }
 
@@ -29,7 +43,6 @@
     position: relative;
     width: 1080px;
     height: 1920px;
-    background: var(--black);
     overflow: hidden;
   }
 
@@ -56,14 +69,16 @@
 
   /* SLIDE VIDÉO — plein cadre, fondu simple sans transform */
   .slide-video {
-    background: var(--black);
+    background:
+      radial-gradient(1200px 900px at 15% 10%, #eaf3f8 0%, rgba(234,243,248,0) 60%),
+      linear-gradient(160deg, #bcd6e7 0%, #9fc3dc 45%, #d2e4ef 100%);
     transition: opacity .6s ease;
   }
   .slide-video video {
     position: absolute; top: 0; left: 0;
     width: 1080px; height: 1920px;
     object-fit: cover;
-    background: var(--black);
+    background: transparent;
   }
 
   /* LOGO BAR — hauteur 176px */
